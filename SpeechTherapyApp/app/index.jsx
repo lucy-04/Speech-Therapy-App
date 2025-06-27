@@ -1,127 +1,34 @@
-import { useState } from 'react';
-import { View, Text, Button, StyleSheet, ActivityIndicator } from 'react-native';
-import { Audio } from 'expo-av';
+import { View, Text, StyleSheet, TouchableOpacity, ImageBackground } from 'react-native';
+import { Link } from 'expo-router';
 
-const AudioRecorder = () => {
-  const [recording, setRecording] = useState(null);
-  const [transcript, setTranscript] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-
-  const startRecording = async () => {
-    try {
-      const permission = await Audio.requestPermissionsAsync();
-      if (permission.status !== 'granted') {
-        alert('Permission to access microphone is required!');
-        return;
-      }
-
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: true,
-        playsInSilentModeIOS: true,
-      });
-
-      const { recording } = await Audio.Recording.createAsync(
-        Audio.RecordingOptionsPresets.HIGH_QUALITY
-      );
-
-      setRecording(recording);
-    } catch (err) {
-      console.error('Failed to start recording:', err);
-    }
-  };
-
-  const stopRecording = async () => {
-    try {
-      setRecording(null);
-      await recording.stopAndUnloadAsync();
-      const uri = recording.getURI();
-      console.log('Recording stopped, file saved at:', uri);
-      await uploadAudio(uri);
-    } catch (err) {
-      console.error('Failed to stop recording:', err);
-    }
-  };
-
-  const uploadAudio = async (uri) => {
-    try {
-      setIsLoading(true);
-      const formData = new FormData();
-      formData.append('audio', {
-        uri,
-        name: 'speech.m4a',
-        type: 'audio/x-m4a',
-      });
-
-      const response = await fetch('http://192.168.1.103:3000/transcribe', {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-
-      const data = await response.json();
-      setTranscript(data.transcription || 'No transcript returned.');
-    } catch (err) {
-      console.error('Upload failed:', err);
-      setTranscript('Error during transcription.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+export default function WelcomeScreen() {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>🎙️ Hindi Speech-to-Text</Text>
+    <ImageBackground source={require('../assets/bg.jpeg')} style={styles.container}>
+      <Text style={styles.title}>Speech Therapy App</Text>
+      <Link href="./LetterGridScreen" asChild>
 
-      {recording ? (
-        <Button title="Stop Recording" color="#e53935" onPress={stopRecording} />
-      ) : (
-        <Button title="Start Recording" color="#43a047" onPress={startRecording} />
-      )}
-
-      {isLoading && <ActivityIndicator size="large" color="#0000ff" style={{ marginTop: 20 }} />}
-
-      {transcript !== '' && (
-        <View style={styles.transcriptBox}>
-          <Text style={styles.transcriptLabel}>📝 Transcript:</Text>
-          <Text style={styles.transcriptText}>{transcript}</Text>
-        </View>
-      )}
-    </View>
+        <TouchableOpacity style={styles.loginButton}>
+          <Text style={styles.loginText}>login</Text>
+        </TouchableOpacity>
+      </Link>
+    </ImageBackground>
   );
-};
-
-export default AudioRecorder;
+}
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 24,
-    justifyContent: 'center',
-    backgroundColor: '#f9f9f9',
-  },
+  container: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   title: {
-    fontSize: 22,
-    fontWeight: '600',
-    marginBottom: 30,
+    fontSize: 36,
     textAlign: 'center',
+    color: '#D22B2B',
+    fontFamily: 'Cochin',
+    marginBottom: 20,
   },
-  transcriptBox: {
-    marginTop: 30,
-    padding: 16,
-    backgroundColor: '#fff3e0',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#ffcc80',
+  loginButton: {
+    backgroundColor: '#B9FBC0',
+    paddingVertical: 10,
+    paddingHorizontal: 40,
+    borderRadius: 20,
   },
-  transcriptLabel: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  transcriptText: {
-    marginTop: 8,
-    fontSize: 16,
-    color: '#333',
-  },
+  loginText: { color: '#000', fontSize: 18 },
 });
